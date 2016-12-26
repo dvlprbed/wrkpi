@@ -23,7 +23,7 @@ public class MySQLiteDatabase extends SQLiteOpenHelper {
 
     private static final String TABLE_POSITIONS = "pidata";
 
-    // Books Table Columns names
+    //
     private static final String KEY_ID = "valeur";
     private static final String KEY_VALUEMBED = "valeur_mbed";
 
