@@ -19,12 +19,12 @@ public class MySQLiteDatabase extends SQLiteOpenHelper {
     // Database Version
     private static final int DATABASE_VERSION = 1;
     // Database Name
-    private static final String DATABASE_NAME = "DataPi";
+    private static final String DATABASE_NAME = "dataMbedBerry";
 
-    private static final String TABLE_POSITIONS = "pidata";
+    private static final String TABLE_ORIENTATIONS = "pidata";
 
     //
-    private static final String KEY_ID = "valeur";
+    private static final String KEY_ID = "id";
     private static final String KEY_VALUEMBED = "valeur_mbed";
 
     public MySQLiteDatabase(Context context) {
@@ -33,12 +33,12 @@ public class MySQLiteDatabase extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String CREATE_POSITION_TABLE = "CREATE TABLE "+TABLE_POSITIONS+" ( " +
+        String CREATE_ORIENTATION_TABLE = "CREATE TABLE "+ TABLE_ORIENTATIONS +" ( " +
                 KEY_ID+ " INTEGER PRIMARY KEY AUTOINCREMENT"+ KEY_VALUEMBED + " INTEGER" + ")";
 
-        Log.d("OnCreate",CREATE_POSITION_TABLE);
+        Log.d("OnCreate",CREATE_ORIENTATION_TABLE);
         // create books table
-        db.execSQL(CREATE_POSITION_TABLE);
+        db.execSQL(CREATE_ORIENTATION_TABLE);
 
     }
 
@@ -51,14 +51,14 @@ public class MySQLiteDatabase extends SQLiteOpenHelper {
         values.put(KEY_VALUEMBED, mbdModel.getValueMbed());
 
         // Inserting Row
-        db.insert(TABLE_POSITIONS, null, values);
+        db.insert(TABLE_ORIENTATIONS, null, values);
         db.close(); // Closing database connection
     }
 
     MbedModel getMbedValue(int id) {
         SQLiteDatabase db = this.getReadableDatabase();
 
-        Cursor cursor = db.query(TABLE_POSITIONS, new String[] { KEY_ID,
+        Cursor cursor = db.query(TABLE_ORIENTATIONS, new String[] { KEY_ID,
                         KEY_VALUEMBED }, KEY_ID + "=?",
                 new String[] { String.valueOf(id) }, null, null, null, null);
         if (cursor != null)
@@ -72,7 +72,7 @@ public class MySQLiteDatabase extends SQLiteOpenHelper {
     public List<MbedModel> getAllMbedValues() {
         List<MbedModel> mbedValueList = new ArrayList<MbedModel>();
         // Select All Query
-        String selectQuery = "SELECT  * FROM " + TABLE_POSITIONS;
+        String selectQuery = "SELECT  * FROM " + TABLE_ORIENTATIONS;
 
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
@@ -82,7 +82,7 @@ public class MySQLiteDatabase extends SQLiteOpenHelper {
             do {
                 MbedModel mbedValue = new MbedModel();
                 mbedValue.setId(Integer.parseInt(cursor.getString(0)));
-                mbedValue.setValueMbed(Integer.parseInt(cursor.getString(0)));
+                mbedValue.setValueMbed(Integer.parseInt(cursor.getString(1)));
 
                 mbedValueList.add(mbedValue);
             } while (cursor.moveToNext());
@@ -91,9 +91,25 @@ public class MySQLiteDatabase extends SQLiteOpenHelper {
 
         return mbedValueList;
     }
+    public int updateMbedValues(MbedModel mbedModel) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(KEY_VALUEMBED, mbedModel.getValueMbed());
+
+        // updating row
+        return db.update(TABLE_ORIENTATIONS, values, KEY_ID + " = ?",
+                new String[] { String.valueOf(mbedModel.getId()) });
+    }
+    public void deleteMbedValue(MbedModel mbedModel) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_ORIENTATIONS, KEY_ID + " = ?",
+                new String[] { String.valueOf(mbedModel.getId()) });
+        db.close();
+    }
     @Override
     public void onUpgrade(SQLiteDatabase db, int i, int i1) {
-        db.execSQL("DROP TABLE IF EXISTS "+TABLE_POSITIONS);
+        db.execSQL("DROP TABLE IF EXISTS "+ TABLE_ORIENTATIONS);
 
         this.onCreate(db);
 
