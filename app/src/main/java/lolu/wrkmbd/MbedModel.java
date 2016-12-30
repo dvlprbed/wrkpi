@@ -7,6 +7,7 @@ package lolu.wrkmbd;
  */
 
 public class MbedModel {
+    //test
     public int id;
     public int valueMbed;
 
