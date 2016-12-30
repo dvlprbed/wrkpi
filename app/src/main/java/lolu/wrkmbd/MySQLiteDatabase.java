@@ -25,7 +25,7 @@ public class MySQLiteDatabase extends SQLiteOpenHelper {
 
     //
     private static final String KEY_ID = "id";
-    private static final String KEY_VALUEMBED = "valeur_mbed";
+    private static final String KEY_VALUEMBED = "valeurmbed";
 
     public MySQLiteDatabase(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -34,7 +34,7 @@ public class MySQLiteDatabase extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String CREATE_ORIENTATION_TABLE = "CREATE TABLE "+ TABLE_ORIENTATIONS +" ( " +
-                KEY_ID+ " INTEGER PRIMARY KEY AUTOINCREMENT"+ KEY_VALUEMBED + " INTEGER" + ")";
+                KEY_ID+ " INTEGER PRIMARY KEY AUTOINCREMENT, "+ KEY_VALUEMBED + " INTEGER )";
 
         Log.d("OnCreate",CREATE_ORIENTATION_TABLE);
         // create books table

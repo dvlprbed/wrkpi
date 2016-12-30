@@ -4,57 +4,113 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Path;
+import android.util.AttributeSet;
 import android.view.View;
+import android.view.animation.AnimationUtils;
 
 import java.util.ArrayList;
 
 
 public class Graph extends View {
-    private int maxSize;
-    private Paint paint;
-    private ArrayList<Integer> graphPoints;
-    public Graph(Context context, int maxSize) {
-        super(context);
-        this.maxSize = maxSize;
+    private Paint paint = new Paint();
+    private ArrayList<Dynamics> data;
 
-        paint = new Paint();
-        paint.setColor(Color.RED);
-        paint.setStrokeWidth(3);
-        paint.setStyle(Paint.Style.STROKE);
+    private Runnable barAnimator = new Runnable() {
 
-        graphPoints = new ArrayList<>();
+        @Override
+        public void run() {
+            long now = AnimationUtils.currentAnimationTimeMillis();
+            boolean needNewFrame = false;
+            for (Dynamics dynamics : data) {
+                dynamics.update(now);
+                if (!dynamics.isAtRest()) {
+                    needNewFrame = true;
+                }
+            }
+            if (needNewFrame) {
+                postDelayed(this, 16);
+            }
+            invalidate();
+        }
+    };
+
+    public Graph(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        paint.setAntiAlias(true);
     }
+
+    public void setData(ArrayList<Float> newData) {
+        long now = AnimationUtils.currentAnimationTimeMillis();
+        if (data == null || data.size() != newData.size()) {
+            data = new ArrayList<Dynamics>();
+            for (float value : newData) {
+                Dynamics dynamics = new Dynamics(40, 0.8f);
+                dynamics.setPosition(value, now);
+                dynamics.setTargetPosition(value, now);
+                data.add(dynamics);
+            }
+            invalidate();
+        } else {
+            for (int i = 0; i < data.size(); i++) {
+                data.get(i).setTargetPosition(newData.get(i), now);
+            }
+        }
+
+        removeCallbacks(barAnimator);
+        post(barAnimator);
+    }
+
     @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
+    public void onDraw(Canvas canvas) {
+        canvas.save();
+        canvas.translate(getPaddingLeft(), getPaddingTop());
+        float width = getWidth() - getPaddingLeft() - getPaddingRight();
+        float height = getHeight() - getPaddingTop() - getPaddingBottom();
 
-        int maxValue = graphPoints.get(0);
-        for (int i = 1; i < graphPoints.size(); ++i) {
-            if (graphPoints.get(i) > maxValue) maxValue = graphPoints.get(i);
-        }
+        drawBars(canvas, width, height, 40);
+        drawAxes(canvas, width, height, 40);
 
-        int width = 0;
-        int height = graphPoints.get(0) * canvas.getHeight() / maxValue;
-        Path path = new Path();
-        path.moveTo(width, canvas.getHeight() - height);
-        for (int i = 1; i < graphPoints.size(); ++i) {
-            width = i * (canvas.getWidth() / (graphPoints.size() - 1));
-            height = graphPoints.get(i) * canvas.getHeight() / maxValue;
-            path.lineTo(width, canvas.getHeight() - height);
-        }
-
-        canvas.drawPath(path, paint);
+        canvas.restore();
     }
 
-    void addGraphPoint(int pt) {
-        if (graphPoints.size() == maxSize) {
-            graphPoints.remove(0);
+    private void drawBars(Canvas canvas, float width, float height, float max) {
+        paint.setColor(0xFF33B5E5);
+        paint.setStyle(Paint.Style.FILL);
+        int numberOfBars = data.size();
+        float barDist = width / (numberOfBars);
+        float barWidth = barDist * 0.8f;
+        float barMargin = barDist - barWidth;
+        for (int bar = 0; bar < numberOfBars; bar++) {
+            float barValue = data.get(bar).getPosition();
+            float barHeight = height * barValue / max;
+            float barLeft = barMargin + bar * barDist;
+            canvas.drawRect(barLeft, height - barHeight, barLeft + barWidth, height, paint);
         }
-        graphPoints.add(pt);
     }
 
-    void clear() {
-        graphPoints.clear();
+    private void drawAxes(Canvas canvas, float width, float height, float max) {
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setColor(Color.BLACK);
+        canvas.drawLine(0, 0, 0, height, paint);
+        canvas.drawLine(0, height, width, height, paint);
+
+        drawVerticalTics(canvas, height, max);
+    }
+
+    private void drawVerticalTics(Canvas canvas, float height, float max) {
+        for (int i = 1; i < max; i++) {
+            float y = height - i * height / max - 2;
+            boolean isEvenTen = i % 10 == 0;
+
+            float xStart = isEvenTen ? -24 : 0;
+            float xEnd = isEvenTen ? 10f : 5f;
+
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setColor(isEvenTen ? Color.BLACK : Color.GRAY);
+            canvas.drawLine(xStart, y, xEnd, y, paint);
+            if (isEvenTen) {
+                canvas.drawText("" + i, xStart, y, paint);
+            }
+        }
     }
 }

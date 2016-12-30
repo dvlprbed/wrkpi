@@ -10,6 +10,11 @@ public class MbedModel {
     public int id;
     public int valueMbed;
 
+    public MbedModel(int id,int valueMbed){
+        this.id=id;
+        this.valueMbed=valueMbed;
+    }
+
     public MbedModel(){
         super();
     }
